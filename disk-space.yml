@@ -1,0 +1,16 @@
+---
+ - name: checking Disk Space
+   hosts: all
+   gather_facts: no
+   vars:
+     mount_point: /u01/
+
+   tasks:
+    - name: checking {{ mount_point }} the space 
+      shell: df -h {{ mount_point }}
+      register: space
+      tags:
+         status
+    - debug:
+       var: space
+...
