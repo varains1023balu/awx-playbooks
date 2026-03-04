@@ -1,0 +1,25 @@
+---
+- name: Corrupting Yum
+  hosts: 25A
+  become: yes
+
+  vars:
+    db_paths:
+      - /var/lib/rpm/__db.001
+      - /var/lib/rpm/__db.002
+      - /var/lib/rpm/__db.003
+
+  tasks:
+    - name: Creating RPM DB Files
+      command: dd if=/dev/zero of={{ item }} bs=2M count=1
+      loop: "{{ db_paths }}"
+      register: rpm
+      tags:
+        - rpm
+
+    - name: Display RPM command output
+      debug:
+        var: rpm
+      tags:
+        - rpm
+...
