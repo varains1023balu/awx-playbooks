@@ -1,0 +1,78 @@
+---
+- name: Create LVM File System
+  hosts: self
+  vars:
+    disk_name: /dev/sdd
+    partition_name: /dev/sdd1
+    vg_name: vg3
+    lv_name: lv1
+    mount_point: /ora_logs
+    fs_type: ext4
+    lv_size: 100%FREE
+
+  tasks:
+
+    - name: Show all variables
+      debug:
+        msg:
+          - "Disk: {{ disk_name }}"
+          - "Partition: {{ partition_name }}"
+          - "VG: {{ vg_name }}"
+          - "LV: {{ lv_name }}"
+          - "Mount: {{ mount_point }}"
+      tags: always
+
+    - name: Create partition
+      parted:
+        device: "{{ disk_name }}"
+        number: 1
+        state: present
+        part_end: 100%
+      tags: partition
+
+    - name: Create Physical Volume
+      command: pvcreate "{{ partition_name }}"
+      register: pv_out
+      tags: pv
+
+    - name: Debug PV output
+      debug:
+        var: pv_out.stdout
+      tags: pv
+
+    - name: Create Volume Group
+      command: vgcreate "{{ vg_name }}" "{{ partition_name }}"
+      register: vg_out
+      tags: vg
+
+    - name: Debug VG output
+      debug:
+        var: vg_out.stdout
+      tags: vg
+
+    - name: Create Logical Volume
+      lvol:
+        vg: "{{ vg_name }}"
+        lv: "{{ lv_name }}"
+        size: "{{ lv_size }}"
+      tags: lv
+
+    - name: Create filesystem
+      filesystem:
+        fstype: "{{ fs_type }}"
+        dev: "/dev/{{ vg_name }}/{{ lv_name }}"
+      tags: fs
+
+    - name: Create mount directory
+      file:
+        path: "{{ mount_point }}"
+        state: directory
+      tags: mount
+
+    - name: Mount filesystem
+      mount:
+        path: "{{ mount_point }}"
+        src: "/dev/{{ vg_name }}/{{ lv_name }}"
+        fstype: "{{ fs_type }}"
+        state: mounted
+      tags: mount
