@@ -1,6 +1,6 @@
 ---
 - name: Create LVM File System
-  hosts: self
+  hosts: 25A
   vars:
     disk_name: /dev/sdd
     partition_name: /dev/sdd1
