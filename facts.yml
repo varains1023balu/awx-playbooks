@@ -1,0 +1,13 @@
+---
+ - name: Genrating Basic Details of Clinet Servers
+   hosts: vlab
+   tasks:
+    - name: Using Debug to displaying Clinent info
+      debug:
+       - msg: "the server's Hosname is {{ ansible_hostname }}"
+       - msg: "The server's Kernel info {{ ansible_kernel_version }}"
+       - msg: "the server's OS version is {{ ansible_os_family }}"
+       - msg: "the server's Distribution s {{ ansible_distribution }}"
+      tags:
+        - info
+...
