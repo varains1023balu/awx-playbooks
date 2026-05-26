@@ -1,0 +1,31 @@
+---
+- name: Create 500 random users in AWX
+  hosts: all
+  become: yes
+
+  vars:
+    user_count: 500
+    password: "password"
+
+  tasks:
+
+    - name: Generate random usernames
+      set_fact:
+        users: "{{ users | default([]) + [ lookup('password', '/dev/null length=6 chars=lowercase') ] }}"
+      loop: "{{ range(1, user_count + 1) | list }}"
+
+    - name: Create users (idempotent)
+      user:
+        name: "{{ item }}"
+        state: present
+      loop: "{{ users }}"
+
+    - name: Set password (RHEL 6 compatible)
+      shell: "echo '{{ item }}:{{ password }}' | chpasswd"
+      loop: "{{ users }}"
+
+    - name: Save created users list
+      copy:
+        content: "{{ users | join('\n') }}"
+        dest: /tmp/awx_created_users.txt
+...
