@@ -1,0 +1,137 @@
+---
+- name: Add 500 fstab entries
+  hosts: all
+  become: yes
+
+  vars:
+    vg_name: "vg001"
+    lv_start: 1
+    lv_end: 500
+
+  tasks:
+
+    - name: Append entries into /etc/fstab
+      lineinfile:
+        path: /etc/fstab
+        line: "/dev/{{ vg_name }}/lv{{ item }} /lv{{ item }} ext4 defaults 1 1"
+        state: present
+        insertafter: EOF
+      loop: "{{ range(lv_start, lv_end + 1) | list }}"
+...
+#########################################################################################
+#Explanation:
+#
+#* `hosts: all`
+#
+#  * Runs the playbook on all servers from your inventory.
+#
+#* `become: yes`
+#
+#  * Uses sudo/root privileges because `/etc/fstab` needs root access.
+#
+#* `vars:`
+#
+#  * Variables used in the playbook.
+#
+#```yaml id="1z4xqw"
+#vg_name: "vg001"
+#```
+#
+#* Storage volume group name.
+#* Used in:
+#  `/dev/vg001/lv1`
+#
+#---
+#
+#```yaml id="8qv6rp"
+#lv_start: 1
+#lv_end: 500
+#```
+#
+#* Defines the range of logical volumes.
+#* Generates lv1 → lv500.
+#
+#---
+#
+#Task section:
+#
+#```yaml id="l8f1km"
+#lineinfile:
+#```
+#
+#* Ansible module to add/update a single line in a file.
+#* Prevents duplicate entries (idempotent).
+#
+#---
+#
+#```yaml id="5w3z2c"
+#path: /etc/fstab
+#```
+#
+#* Target file.
+#
+#---
+#
+#```yaml id="9s0gva"
+#line: "/dev/{{ vg_name }}/lv{{ item }} /lv{{ item }} ext4 defaults 1 1"
+#```
+#
+#This creates each line dynamically.
+#
+#Example when `item=1`:
+#
+#```text id="d5a9pt"
+#/dev/vg001/lv1 /lv1 ext4 defaults 1 1
+#```
+#
+#Example when `item=500`:
+#
+#```text id="k7m3uy"
+#/dev/vg001/lv500 /lv500 ext4 defaults 1 1
+#```
+#
+#---
+#
+#```yaml id="8s9xjq"
+#state: present
+#```
+#
+#* Ensures line exists.
+#* If already present, it won't add again.
+#
+#---
+#
+#```yaml id="0n4hse"
+#insertafter: EOF
+#```
+#
+#* Adds lines at the end of `/etc/fstab`.
+#
+#---
+#
+#```yaml id="v4c2rk"
+#loop: "{{ range(lv_start, lv_end + 1) | list }}"
+#```
+#
+#This is the important part.
+#
+#`range(1, 501)` generates:
+#
+#```text id="g2u7mw"
+#1,2,3,4,5....500
+#```
+#
+#For each number:
+#
+#* `item` becomes current value
+#* Ansible creates one fstab entry.
+#
+#So:
+#
+#* item=1 → lv1
+#* item=2 → lv2
+#* ...
+#* item=500 → lv500
+#
+#Result:
+#500 lines appended automatically.
