@@ -1,0 +1,9 @@
+---
+ - name: Rebooting Servers
+   hosts: all
+   tasks:
+    - name: Reboot Servers
+      reboot:
+       reboot_timeout: 300
+       msg: "Rebooting server {{ ansible_hostname }} post successful patching by AWX Workflow"
+...
